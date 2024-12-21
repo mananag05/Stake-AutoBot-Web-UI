@@ -16,18 +16,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getRandomTimeOut } from "../hooks/useDiceGame";
 import { getConstraints } from "../hooks/useDiceGame";
 import { schema } from "@/Schemas";
+import DiceForm from "@/src/components/DiceForm";
 import DiceHeader from "@/src/components/diceHeader";
+import DiceHistory, { HistoryItem } from "@/src/components/DiceHistory";
 
-type HistoryItem = {
-  result: "WON" | "LOST"; // assuming winORlose is either "WON" or "LOST"
-  betAmount: number;
-  payout: number;
-  newBalance: number;
-  currentLoseStreak: number;
-  currentWinStreak: number;
-  highestLoseStreak: number;
-  highestWinStreak: number;
-};
 
 function RouteComponent() {
   const { mutateAsync } = useDiceGame();
@@ -57,7 +49,7 @@ function RouteComponent() {
     currentWinStreak: 0,
     currentBetAmount: Number(values.initialBetAmount),
     nextBetAmount: Number(values.initialBetAmount),
-    initialBetAmount : Number(values.initialBetAmount)
+    initialBetAmount: Number(values.initialBetAmount),
   });
 
   useEffect(() => {
@@ -77,7 +69,10 @@ function RouteComponent() {
           accountData?.virtualBalance || "10"
         );
         setFiledValue("realBalance", accountData?.realBalance || "10");
-        setFiledValue( "initialBetAmount",accountData?.initialBetAmount || "0.01");
+        setFiledValue(
+          "initialBetAmount",
+          accountData?.initialBetAmount || "0.01"
+        );
         virtualBank.current.currentBetAmount = Number(
           accountData?.initialBetAmount || "0.01"
         );
@@ -209,11 +204,18 @@ function RouteComponent() {
           virtualBank.current.balance -= virtualBank.current.currentBetAmount;
           virtualBank.current.currentLoseStreak += 1;
           virtualBank.current.currentWinStreak = 0;
-          if(virtualBank.current.currentLoseStreak === Number(values.stopAtCertainLossStreak)){
-            virtualBank.current.currentBetAmount = Number(values.initialBetAmount);
+          if (
+            virtualBank.current.currentLoseStreak ===
+            Number(values.stopAtCertainLossStreak)
+          ) {
+            virtualBank.current.currentBetAmount = Number(
+              values.initialBetAmount
+            );
             virtualBank.current.currentLoseStreak = 0;
           } else {
-            virtualBank.current.currentBetAmount *= Number(values.nextBetMultiplier)
+            virtualBank.current.currentBetAmount *= Number(
+              values.nextBetMultiplier
+            );
           }
           setFiledValue(
             "virtualBalance",
@@ -258,279 +260,21 @@ function RouteComponent() {
         {!loading && (
           <>
             <DiceHeader
-              realBalance={values.realBalance || '0'}
+              realBalance={values.realBalance || "0"}
               serviceRunning={serviceRunning}
               serviceRunningRef={serviceRunningRef}
               setServiceRunning={setServiceRunning}
-              virtualBalance={values.virtualBalance || '0'}
+              virtualBalance={values.virtualBalance || "0"}
             />
             <div className="flex flex-1 overflow-hidden">
-              <div
-                className={twMerge(
-                  `flex flex-col max-w-96 overflow-y-auto gap-3 -ml-2 bg-neutral-700 rounded-se-2xl`,
-                  styles["hide-scrollbar"]
-                )}
-              >
-                <div className="p-2 flex flex-col gap-2 bg-neutral-800 rounded-xl m-2">
-                  <div className="flex flex-col text-white">
-                    <p className="font-mono text-sm">Cookie*</p>
-                    <textarea
-                      className={twMerge(
-                        "bg-primarybg p-2 outline-none rounded-xl resize-none",
-                        styles["hide-scrollbar"]
-                      )}
-                      disabled={serviceRunning}
-                      onChange={(e) => setFiledValue("cookie", e.target.value)}
-                      value={values.cookie}
-                      rows={3}
-                    />
-                  </div>
-                  <div className="flex flex-col text-white">
-                    <p className="font-mono text-sm">xAccessToken*</p>
-                    <input
-                      className="bg-primarybg p-2 outline-none rounded-xl resize-none"
-                      onChange={(e) =>
-                        setFiledValue("xAccessToken", e.target.value)
-                      }
-                      disabled={serviceRunning}
-                      value={values.xAccessToken}
-                    />
-                  </div>
-                  <div className="flex flex-col text-white">
-                    <p className="font-mono text-sm">xLockDownToken*</p>
-                    <input
-                      className="bg-primarybg p-2 outline-none rounded-xl resize-none"
-                      onChange={(e) =>
-                        setFiledValue("xLockDownToken", e.target.value)
-                      }
-                      disabled={serviceRunning}
-                      value={values.xLockDownToken}
-                    />
-                  </div>
-                  <button
-                    onClick={() =>
-                      handleSaveHeadersData({
-                        cookie: values.cookie || "",
-                        xAccessToken: values.xAccessToken || "",
-                        xLockDownToken: values.xLockDownToken || "",
-                      })
-                    }
-                    disabled={serviceRunning}
-                    className="bg-green-500 w-full text-center p-2 rounded-xl mt-2"
-                  >
-                    Save
-                  </button>
-                </div>
-                <div className="p-2 flex flex-col gap-2 bg-neutral-800 rounded-xl m-2">
-                  <div className="flex flex-col text-white">
-                    <p className="font-mono text-sm">Set Real Balance</p>
-                    <input
-                      type="number"
-                      min={0}
-                      className="bg-primarybg p-2 outline-none rounded-xl resize-none"
-                      onChange={(e) =>
-                        setFiledValue("realBalance", e.target.value)
-                      }
-                      value={values.realBalance}
-                      disabled={serviceRunning}
-                    />
-                  </div>
-                  <div className="flex flex-col text-white">
-                    <p className="font-mono text-sm">Set Virtual Balance</p>
-                    <input
-                      type="number"
-                      min={0}
-                      className="bg-primarybg p-2 outline-none rounded-xl resize-none"
-                      onChange={(e) =>
-                        setFiledValue("virtualBalance", e.target.value)
-                      }
-                      value={values.virtualBalance}
-                      disabled={serviceRunning}
-                    />
-                  </div>
-                  <div className="flex flex-col text-white">
-                    <p className="font-mono text-sm">Set Initial Bet</p>
-                    <input
-                      type="number"
-                      min={0}
-                      className="bg-primarybg p-2 outline-none rounded-xl resize-none"
-                      onChange={(e) =>
-                        setFiledValue("initialBetAmount", e.target.value)
-                      }
-                      value={values.initialBetAmount}
-                      disabled={serviceRunning}
-                    />
-                  </div>
-                  <div className="flex flex-col text-white">
-                    <p className="font-mono text-sm">On Loss Bet Multiplier</p>
-                    <input
-                      type="number"
-                      min={0}
-                      className="bg-primarybg p-2 outline-none rounded-xl resize-none"
-                      onChange={(e) =>
-                        setFiledValue("nextBetMultiplier", e.target.value)
-                      }
-                      disabled={serviceRunning}
-                      value={values.nextBetMultiplier}
-                    />
-                  </div>
-                  <div className="flex flex-col text-white">
-                    <p className="font-mono text-sm">Reset On Loss Streak</p>
-                    <input
-                      type="number"
-                      min={0}
-                      className="bg-primarybg p-2 outline-none rounded-xl resize-none"
-                      onChange={(e) =>
-                        setFiledValue("stopAtCertainLossStreak", e.target.value)
-                      }
-                      disabled={serviceRunning}
-                      value={values.stopAtCertainLossStreak}
-                    />
-                  </div>
-                  <div className="flex flex-col text-white">
-                    <p className="font-mono text-sm">Method</p>
-                    <select
-                      onChange={(e) =>
-                        setFiledValue(
-                          "method",
-                          e.target.value as "virtual" | "real"
-                        )
-                      }
-                      disabled={serviceRunning}
-                      value={values.method || "virtual"}
-                      className="bg-primarybg p-2 outline-none rounded-xl resize-none"
-                    >
-                      <option value="virtual">Virtual</option>
-                      <option value="real">Real</option>
-                    </select>
-                  </div>
-                  <div className="flex flex-col text-white">
-                    <p className="font-mono text-sm">Currency</p>
-                    <select
-                      onChange={(e) =>
-                        setFiledValue(
-                          "conditon",
-                          e.target.value as "switch" | "above" | "below"
-                        )
-                      }
-                      disabled={serviceRunning}
-                      value={values.conditon || "switch"}
-                      className="bg-primarybg p-2 outline-none rounded-xl resize-none"
-                    >
-                      <option value="inr">INR</option>
-                      <option value="btc">BTC</option>
-                      <option value="eth">ETH</option>
-                      <option value="usdt">USDT</option>
-                    </select>
-                  </div>
-                  <div className="flex flex-col text-white">
-                    <p className="font-mono text-sm">Condition</p>
-                    <select
-                      onChange={(e) =>
-                        setFiledValue(
-                          "conditon",
-                          e.target.value as "switch" | "above" | "below"
-                        )
-                      }
-                      disabled={serviceRunning}
-                      value={values.conditon || "switch"}
-                      className="bg-primarybg p-2 outline-none rounded-xl resize-none"
-                    >
-                      <option value="switch">Switch</option>
-                      <option value="above">Above</option>
-                      <option value="below">Below</option>
-                    </select>
-                  </div>
-                  <div className="flex flex-col text-white">
-                    <p className="font-mono text-sm">Target</p>
-                    <input
-                      type="number"
-                      min={0}
-                      max={100}
-                      className="bg-primarybg p-2 outline-none rounded-xl resize-none"
-                      onChange={(e) => {
-                        const newValue = Math.min(Number(e.target.value), 100);
-                        setFiledValue("target", String(newValue));
-                      }}
-                      disabled={serviceRunning}
-                      value={values.target}
-                    />
-                  </div>
-                  <button
-                    onClick={() =>
-                      handleSaveAccountData({
-                        virtualBalance: values.virtualBalance || "",
-                        initialBetAmount: values.initialBetAmount || "",
-                        nextBetMultiplier: values.nextBetMultiplier || "",
-                        stopAtCertainLossStreak:
-                          values.stopAtCertainLossStreak || "",
-                        conditon: values.conditon || "above",
-                        target: values.target || "",
-                        realBalance: values.realBalance || "",
-                        currency: values.currency || "inr",
-                        method: values.method || "virtual",
-                      })
-                    }
-                    disabled={serviceRunning}
-                    className="bg-green-500 w-full text-center p-2 rounded-xl mt-2"
-                  >
-                    Save
-                  </button>
-                </div>
-              </div>
+              <DiceForm
+                serviceRunning={serviceRunning}
+                setFiledValue={setFiledValue}
+                values={values}
+              />
               <div className="bg-primarybg flex-1 rounded-md m-2 p-2 flex flex-col">
                 {history && (
-                  <div className="flex-1 overflow-y-auto">
-                    <table className="w-full table-auto border-collapse">
-                      <thead className="sticky top-0 bg-gray-200">
-                        <tr className="text-gray-700 font-semibold">
-                          <th className="p-4 text-center">Result</th>
-                          <th className="p-4 text-center">Bet Amount</th>
-                          <th className="p-4 text-center">Payout</th>
-                          <th className="p-4 text-center">New Balance</th>
-                          <th className="p-4 text-center">Lose Streak</th>
-                          <th className="p-4 text-center">Win Streak</th>
-                          <th className="p-4 text-center">
-                            Highest Lose Streak
-                          </th>
-                          <th className="p-4 text-center">
-                            Highest Win Streak
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {history.map((item, index) => (
-                          <tr
-                            key={index}
-                            className={
-                              index % 2 === 0 ? "bg-white" : "bg-gray-50"
-                            }
-                          >
-                            <td className="p-4 text-center">{item.result}</td>
-                            <td className="p-4 text-center">
-                              {item.betAmount}
-                            </td>
-                            <td className="p-4 text-center">{item.payout}</td>
-                            <td className="p-4 text-center">
-                              {item.newBalance}
-                            </td>
-                            <td className="p-4 text-center">
-                              {item.currentLoseStreak}
-                            </td>
-                            <td className="p-4 text-center">
-                              {item.currentWinStreak}
-                            </td>
-                            <td className="p-4 text-center">
-                              {item.highestLoseStreak}
-                            </td>
-                            <td className="p-4 text-center">
-                              {item.highestWinStreak}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
+                  <DiceHistory history={history} />
                 )}
               </div>
             </div>
