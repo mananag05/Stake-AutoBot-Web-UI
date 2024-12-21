@@ -58,3 +58,27 @@ export function useDiceGame() {
     }
   });
 }
+
+export function getRandomTimeOut() {
+  return Math.floor(Math.random() * (400 - 200 + 1)) + 400;
+}
+
+export const getConstraints = ({
+  condition,
+  target,
+}: {
+  condition: "above" | "below" | "switch";
+  target: number;
+}): { condition: "above" | "below"; target: number } => {
+  if (condition === "switch") {
+    const result = Math.random() < 0.5 ? "above" : "below";
+    return {
+      condition: result,
+      target: result === "above" ? target : 100 - target,
+    };
+  }
+  return {
+    condition,
+    target,
+  };
+};
