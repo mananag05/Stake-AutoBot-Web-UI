@@ -1,6 +1,7 @@
+import { TCurrency } from "@/Schemas";
 import localforage from "localforage";
 import toast from "react-hot-toast";
-import { TCurrency } from "@/routes";
+
 interface IDiceGameHeadersData {
   cookie: string;
   xAccessToken: string;

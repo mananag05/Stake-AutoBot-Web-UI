@@ -15,6 +15,8 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import { getRandomTimeOut } from "../hooks/useDiceGame";
 import { getConstraints } from "../hooks/useDiceGame";
+import { schema } from "@/Schemas";
+import DiceHeader from "@/src/components/diceHeader";
 
 type HistoryItem = {
   result: "WON" | "LOST"; // assuming winORlose is either "WON" or "LOST"
@@ -55,6 +57,7 @@ function RouteComponent() {
     currentWinStreak: 0,
     currentBetAmount: Number(values.initialBetAmount),
     nextBetAmount: Number(values.initialBetAmount),
+    initialBetAmount : Number(values.initialBetAmount)
   });
 
   useEffect(() => {
@@ -74,10 +77,7 @@ function RouteComponent() {
           accountData?.virtualBalance || "10"
         );
         setFiledValue("realBalance", accountData?.realBalance || "10");
-        setFiledValue(
-          "initialBetAmount",
-          accountData?.initialBetAmount || "0.01"
-        );
+        setFiledValue( "initialBetAmount",accountData?.initialBetAmount || "0.01");
         virtualBank.current.currentBetAmount = Number(
           accountData?.initialBetAmount || "0.01"
         );
@@ -187,19 +187,17 @@ function RouteComponent() {
         }
 
         if (winORlose === "WON") {
-          virtualBank.current.currentWinStreak++;
+          virtualBank.current.balance +=
+            virtualBank.current.currentBetAmount * (data.payoutMultiplier - 1);
+          virtualBank.current.currentBetAmount = Number(
+            values.initialBetAmount
+          );
+          virtualBank.current.currentWinStreak += 1;
           virtualBank.current.currentLoseStreak = 0;
           setFiledValue(
             "virtualBalance",
-            String(
-              Number(virtualBank.current.balance) +
-                Number(virtualBank.current.currentBetAmount) *
-                  Number(data.payoutMultiplier - 1)
-            )
+            virtualBank.current.balance.toString()
           );
-          virtualBank.current.balance =
-            virtualBank.current.balance +
-            virtualBank.current.currentBetAmount * (data.payoutMultiplier - 1);
           if (
             virtualBank.current.currentWinStreak >
             virtualBank.current.highestWinStreak
@@ -208,20 +206,19 @@ function RouteComponent() {
               virtualBank.current.currentWinStreak;
           }
         } else if (winORlose == "LOST") {
-          virtualBank.current.currentLoseStreak++;
+          virtualBank.current.balance -= virtualBank.current.currentBetAmount;
+          virtualBank.current.currentLoseStreak += 1;
           virtualBank.current.currentWinStreak = 0;
+          if(virtualBank.current.currentLoseStreak === Number(values.stopAtCertainLossStreak)){
+            virtualBank.current.currentBetAmount = Number(values.initialBetAmount);
+            virtualBank.current.currentLoseStreak = 0;
+          } else {
+            virtualBank.current.currentBetAmount *= Number(values.nextBetMultiplier)
+          }
           setFiledValue(
             "virtualBalance",
-            String(
-              Number(virtualBank.current.balance) -
-                Number(virtualBank.current.currentBetAmount)
-            )
+            virtualBank.current.balance.toString()
           );
-          virtualBank.current.balance = virtualBank.current.balance - virtualBank.current.currentBetAmount;
-          
-          virtualBank.current.nextBetAmount =
-            Number(virtualBank.current.nextBetAmount) *
-            Number(values.nextBetMultiplier);
           if (
             virtualBank.current.currentLoseStreak >
             virtualBank.current.highestLoseStreak
@@ -260,32 +257,13 @@ function RouteComponent() {
       <div className=" bg-[#595959] flex flex-col h-full w-full rounded-md">
         {!loading && (
           <>
-            <div className="flex">
-              <p className="p-2 text-yellow-100 font-semibold font-sans">
-                Stake Autobot Webui
-              </p>
-              <div className="flex flex-1 justify-center gap-4 items-center">
-                <div className="bg-primarybg text-yellow-100 font-semibold text-xs mt-2 rounded-xl p-2">
-                  <p>Virtual Balance : {values.virtualBalance}</p>
-                </div>
-                <div className="bg-primarybg text-yellow-100 font-semibold text-xs mt-2 rounded-xl p-2">
-                  <p>Real Balance : {values.realBalance}</p>
-                </div>
-              </div>
-              <button
-                onClick={() => {
-                  setServiceRunning(!serviceRunning);
-                  serviceRunningRef.current = !serviceRunningRef.current;
-                }}
-                className={twMerge(
-                  "transition-all duration-300 w-28 p-2 mt-2 mr-4 px-6 rounded-xl ml-auto h-9 text-xs text-center text-yellow-100 font-semibold",
-                  serviceRunning ? "bg-red-500" : "bg-green-500 text-black"
-                )}
-              >
-                {serviceRunning ? "STOP" : "START"}
-              </button>
-            </div>
-
+            <DiceHeader
+              realBalance={values.realBalance || '0'}
+              serviceRunning={serviceRunning}
+              serviceRunningRef={serviceRunningRef}
+              setServiceRunning={setServiceRunning}
+              virtualBalance={values.virtualBalance || '0'}
+            />
             <div className="flex flex-1 overflow-hidden">
               <div
                 className={twMerge(
@@ -500,12 +478,12 @@ function RouteComponent() {
                   </button>
                 </div>
               </div>
-              <div className="bg-primarybg flex-1 rounded-md m-2 p-2">
+              <div className="bg-primarybg flex-1 rounded-md m-2 p-2 flex flex-col">
                 {history && (
-                  <div className="overflow-x-auto">
+                  <div className="flex-1 overflow-y-auto">
                     <table className="w-full table-auto border-collapse">
-                      <thead>
-                        <tr className="bg-gray-200 text-gray-700 font-semibold">
+                      <thead className="sticky top-0 bg-gray-200">
+                        <tr className="text-gray-700 font-semibold">
                           <th className="p-4 text-center">Result</th>
                           <th className="p-4 text-center">Bet Amount</th>
                           <th className="p-4 text-center">Payout</th>
@@ -563,24 +541,6 @@ function RouteComponent() {
     </div>
   );
 }
-
-const currencySchema = z.enum(["btc", "eth", "usdt", "inr"]);
-export type TCurrency = z.infer<typeof currencySchema>;
-
-const schema = z.object({
-  cookie: z.string(),
-  xAccessToken: z.string(),
-  xLockDownToken: z.string(),
-  realBalance: z.string(),
-  virtualBalance: z.string(),
-  initialBetAmount: z.string(),
-  nextBetMultiplier: z.string(),
-  stopAtCertainLossStreak: z.string(),
-  conditon: z.enum(["above", "below", "switch"]),
-  method: z.enum(["virtual", "real"]),
-  currency: currencySchema,
-  target: z.string(),
-});
 
 export const Route = createFileRoute("/")({
   component: RouteComponent,
