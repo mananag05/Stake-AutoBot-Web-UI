@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import useForm from "../hooks/useForm";
 import { set, z } from "zod";
-import { useDiceGame } from "../hooks/useDiceGame";
+import { createGetConstraints, useDiceGame } from "../hooks/useDiceGame";
 import localforage from "../src/utils/localForage";
 import { useEffect, useRef, useState } from "react";
 import styles from "../styles/hide-scrollbar.module.scss";
@@ -14,12 +14,11 @@ import {
 } from "../src/utils/updateDice";
 import { Skeleton } from "@/components/ui/skeleton";
 import { getRandomTimeOut } from "../hooks/useDiceGame";
-import { getConstraints } from "../hooks/useDiceGame";
 import { schema } from "@/Schemas";
 import DiceForm from "@/src/components/DiceForm";
-import DiceHeader from "@/src/components/diceHeader";
+import DiceHeader from "@/src/components/DiceHeader";
 import DiceHistory, { HistoryItem } from "@/src/components/DiceHistory";
-
+const getConstraints = createGetConstraints();
 
 function RouteComponent() {
   const { mutateAsync } = useDiceGame();

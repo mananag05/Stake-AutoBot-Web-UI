@@ -19,6 +19,7 @@ export function useDiceGame() {
       xLockDownToken,
       target,
       amountToBet = 0,
+      condition,
       currency = "inr",
     }: IDiceGame) => {
       const myHeaders = new Headers();
@@ -30,10 +31,10 @@ export function useDiceGame() {
         query: diceQuery,
         variables: {
           target: target,
-          condition: "above",
+          condition: condition,
           identifier: "Lv1A3P2T4u41Uuf3ucUpC",
           amount: amountToBet,
-          currency: "inr",
+          currency: currency,
         },
       });
       const requestOptions = {
@@ -63,22 +64,27 @@ export function getRandomTimeOut() {
   return Math.floor(Math.random() * (400 - 200 + 1)) + 400;
 }
 
-export const getConstraints = ({
-  condition,
-  target,
-}: {
-  condition: "above" | "below" | "switch";
-  target: number;
-}): { condition: "above" | "below"; target: number } => {
-  if (condition === "switch") {
-    const result = Math.random() < 0.5 ? "above" : "below";
-    return {
-      condition: result,
-      target: result === "above" ? target : 100 - target,
-    };
-  }
-  return {
+export const createGetConstraints = () => {
+  let lastCondition: "above" | "below" | null = null;
+
+  return ({
     condition,
     target,
+  }: {
+    condition: "above" | "below" | "switch";
+    target: number;
+  }): { condition: "above" | "below"; target: number } => {
+    if (condition === "switch") {
+      const nextCondition = lastCondition === "above" ? "below" : "above";
+      lastCondition = nextCondition;
+      return {
+        condition: nextCondition,
+        target: nextCondition === "above" ? target : 100 - target,
+      };
+    }
+    return {
+      condition,
+      target,
+    };
   };
 };
