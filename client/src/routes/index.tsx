@@ -11,7 +11,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { getRandomTimeOut } from "../hooks/useDiceGame";
 import { schema } from "@/Schemas";
 import DiceForm from "@/src/components/DiceForm";
-import DiceHeader from "@/src/components/DiceHeader";
+import DiceHeader from "@/src/components/tempfile";
 import DiceHistory, { HistoryItem } from "@/src/components/DiceHistory";
 import toast from "react-hot-toast";
 const getConstraints = createGetConstraints();
