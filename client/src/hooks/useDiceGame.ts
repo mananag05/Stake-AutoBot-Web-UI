@@ -61,7 +61,7 @@ export function useDiceGame() {
 }
 
 export function getRandomTimeOut() {
-  return Math.floor(Math.random() * (400 - 200 + 1)) + 400;
+  return Math.floor(Math.random() * (1200 - 800 + 1)) + 800;
 }
 
 export const createGetConstraints = () => {

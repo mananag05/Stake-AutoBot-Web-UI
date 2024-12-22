@@ -1,14 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import useForm from "../hooks/useForm";
-import { set, z } from "zod";
 import { createGetConstraints, useDiceGame } from "../hooks/useDiceGame";
 import localforage from "../src/utils/localForage";
 import { useEffect, useRef, useState } from "react";
-import styles from "../styles/hide-scrollbar.module.scss";
-import { twMerge } from "tailwind-merge";
 import {
-  handleSaveAccountData,
-  handleSaveHeadersData,
   IDiceGameAccountData,
   IDiceGameHeadersData,
 } from "../src/utils/updateDice";
@@ -18,6 +13,7 @@ import { schema } from "@/Schemas";
 import DiceForm from "@/src/components/DiceForm";
 import DiceHeader from "@/src/components/DiceHeader";
 import DiceHistory, { HistoryItem } from "@/src/components/DiceHistory";
+import toast from "react-hot-toast";
 const getConstraints = createGetConstraints();
 
 function RouteComponent() {
@@ -38,6 +34,7 @@ function RouteComponent() {
     stopAtCertainLossStreak: "",
     conditon: "above",
     target: "",
+    stopAtVirtualBalnce : "0"
   });
 
   const virtualBank = useRef({
@@ -87,6 +84,7 @@ function RouteComponent() {
         setFiledValue("target", accountData?.target || "50.5");
         setFiledValue("currency", accountData?.currency || "inr");
         setFiledValue("method", accountData?.method || "virtual");
+        setFiledValue("stopAtVirtualBalnce", accountData?.stopAtVirtualBalnce || "0");
       } catch (error) {
         console.error("Error fetching data from localforage:", error);
       }
@@ -123,7 +121,7 @@ function RouteComponent() {
         condition: "above" | "below";
         target: number;
       };
-      if (data && serviceRunningRef.current) {
+      if (data) {
         const winORlose =
           result.condition === "above"
             ? result.result > result.target
@@ -180,7 +178,7 @@ function RouteComponent() {
           setHistory((prev) => [...(prev || []), historyItem]);
         }
 
-        if (winORlose === "WON") {
+        if (winORlose === "WON") { // won virtual
           virtualBank.current.balance +=
             virtualBank.current.currentBetAmount * (data.payoutMultiplier - 1);
           virtualBank.current.currentBetAmount = Number(
@@ -199,7 +197,7 @@ function RouteComponent() {
             virtualBank.current.highestWinStreak =
               virtualBank.current.currentWinStreak;
           }
-        } else if (winORlose == "LOST") {
+        } else if (winORlose == "LOST") { // lost virtual
           virtualBank.current.balance -= virtualBank.current.currentBetAmount;
           virtualBank.current.currentLoseStreak += 1;
           virtualBank.current.currentWinStreak = 0;
@@ -227,17 +225,27 @@ function RouteComponent() {
             virtualBank.current.highestLoseStreak =
               virtualBank.current.currentLoseStreak;
           }
+          if(virtualBank.current.balance < virtualBank.current.currentBetAmount){ 
+            setServiceRunning(false);
+            toast.error("Virtual balance is less than current bet amount");
+            serviceRunningRef.current = false;
+          }
         }
       } else {
         throw new Error("Error: No data received from server");
       }
-      if (serviceRunningRef.current) {
+      if (serviceRunningRef.current && virtualBank.current.balance > Number(values.stopAtVirtualBalnce)) {
         setTimeout(() => {
           startVirtualService();
         }, getRandomTimeOut());
       }
     } catch (error) {
       console.error("Error:", error);
+      if (serviceRunningRef.current) {
+        setTimeout(() => {
+          startVirtualService();
+        }, getRandomTimeOut());
+      }
     }
   };
 
@@ -272,9 +280,7 @@ function RouteComponent() {
                 values={values}
               />
               <div className="bg-primarybg flex-1 rounded-md m-2 p-2 flex flex-col">
-                {history && (
-                  <DiceHistory history={history} />
-                )}
+                {history && <DiceHistory history={history} />}
               </div>
             </div>
           </>

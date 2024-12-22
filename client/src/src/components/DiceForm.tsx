@@ -197,6 +197,22 @@ const DiceForm = ({
             value={values.target}
           />
         </div>
+        <div className="flex flex-col text-white">
+          <p className="font-mono text-sm">Stop when virtual balance reach</p>
+          <input
+            type="number"
+            min={0}
+            max={100}
+            className="bg-primarybg p-2 outline-none rounded-xl resize-none"
+            onChange={(e) => {
+              const newValue = Math.min(Number(e.target.value), 100);
+              setFiledValue("stopAtVirtualBalnce", String(newValue));
+            }}
+            onWheel={preventScrollChange}
+            disabled={serviceRunning}
+            value={values.stopAtVirtualBalnce}
+          />
+        </div>
         <button
           onClick={() =>
             handleSaveAccountData({
@@ -209,6 +225,7 @@ const DiceForm = ({
               realBalance: values.realBalance || "",
               currency: values.currency || "inr",
               method: values.method || "virtual",
+              stopAtVirtualBalnce: values.stopAtVirtualBalnce
             })
           }
           disabled={serviceRunning}

@@ -18,6 +18,7 @@ interface IDiceGameAccountData {
   target: string;
   currency: TCurrency;
   method : "virtual" | "real";
+  stopAtVirtualBalnce : string;
 }
 
 const handleSaveHeadersData = ({
@@ -42,7 +43,8 @@ const handleSaveAccountData = ({
   conditon,
   target,
   currency,
-  method
+  method,
+  stopAtVirtualBalnce
 }: IDiceGameAccountData) => {
   localforage.setItem("diceGameAccountData", {
     virtualBalance: virtualBalance,
@@ -53,7 +55,8 @@ const handleSaveAccountData = ({
     conditon: conditon,
     target: target,
     currency : currency,
-    method : method
+    method : method,
+    stopAtVirtualBalnce: stopAtVirtualBalnce
   });
   toast.success("Updated Successfully");
 };
