@@ -17,8 +17,9 @@ interface IDiceGameAccountData {
   conditon: "above" | "below" | "switch";
   target: string;
   currency: TCurrency;
-  method : "virtual" | "real";
-  stopAtVirtualBalnce : string;
+  method: "virtual" | "real";
+  stopAtVirtualBalnce: string;
+  enableChunksBetting?: boolean;
 }
 
 const handleSaveHeadersData = ({
@@ -34,7 +35,7 @@ const handleSaveHeadersData = ({
   toast.success("Updated Successfully");
 };
 
-const handleSaveAccountData = ({
+const handleSaveAccountData = async ({
   virtualBalance,
   realBalance,
   initialBetAmount,
@@ -44,26 +45,45 @@ const handleSaveAccountData = ({
   target,
   currency,
   method,
-  stopAtVirtualBalnce
+  stopAtVirtualBalnce,
 }: IDiceGameAccountData) => {
-  localforage.setItem("diceGameAccountData", {
-    virtualBalance: virtualBalance,
-    realBalance: realBalance,
-    initialBetAmount: initialBetAmount,
-    nextBetMultiplier: nextBetMultiplier,
-    stopAtCertainLossStreak: stopAtCertainLossStreak,
-    conditon: conditon,
-    target: target,
-    currency : currency,
-    method : method,
-    stopAtVirtualBalnce: stopAtVirtualBalnce
-  });
+  const existingData = await localforage.getItem<IDiceGameAccountData>("diceGameAccountData");
+  const updatedData = {
+    ...existingData,
+    virtualBalance,
+    realBalance,
+    initialBetAmount,
+    nextBetMultiplier,
+    stopAtCertainLossStreak,
+    conditon,
+    target,
+    currency,
+    method,
+    stopAtVirtualBalnce,
+  }
+  await localforage.setItem("diceGameAccountData", updatedData);
   toast.success("Updated Successfully");
+};
+
+const handleUpdateEnableChunksBetting = async (enableChunksBetting: boolean) => {
+  try {
+    const existingData = await localforage.getItem<IDiceGameAccountData>("diceGameAccountData");
+    const updatedData = {
+      ...existingData,
+      enableChunksBetting,
+    };
+    await localforage.setItem("diceGameAccountData", updatedData);
+    toast.success("Updated Successfully");
+  } catch (error) {
+    toast.error("Failed to update enableChunksBetting");
+    console.error(error);
+  }
 };
 
 export {
   handleSaveHeadersData,
   handleSaveAccountData,
+  handleUpdateEnableChunksBetting,
   IDiceGameAccountData,
   IDiceGameHeadersData,
 };

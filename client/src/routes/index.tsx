@@ -22,6 +22,7 @@ function RouteComponent() {
   const serviceRunningRef = useRef(serviceRunning);
   const [loading, setLoading] = useState(true);
   const [history, setHistory] = useState<HistoryItem[] | null>([]);
+  const [totalPayout, setTotalPayout] = useState(0);
   const { values, setFiledValue } = useForm([], schema, {
     cookie: "",
     xAccessToken: "",
@@ -33,7 +34,8 @@ function RouteComponent() {
     stopAtCertainLossStreak: "",
     conditon: "above",
     target: "",
-    stopAtVirtualBalnce : "0"
+    stopAtVirtualBalnce: "0",
+    enableChunksBetting: false,
   });
 
   const virtualBank = useRef({
@@ -83,7 +85,14 @@ function RouteComponent() {
         setFiledValue("target", accountData?.target || "50.5");
         setFiledValue("currency", accountData?.currency || "inr");
         setFiledValue("method", accountData?.method || "virtual");
-        setFiledValue("stopAtVirtualBalnce", accountData?.stopAtVirtualBalnce || "0");
+        setFiledValue(
+          "stopAtVirtualBalnce",
+          accountData?.stopAtVirtualBalnce || "0"
+        );
+        setFiledValue(
+          "enableChunksBetting",
+          accountData?.enableChunksBetting || false
+        );
       } catch (error) {
         console.error("Error fetching data from localforage:", error);
       }
@@ -177,7 +186,8 @@ function RouteComponent() {
           setHistory((prev) => [...(prev || []), historyItem]);
         }
 
-        if (winORlose === "WON") { // won virtual
+        if (winORlose === "WON") {
+          // won virtual
           virtualBank.current.balance +=
             virtualBank.current.currentBetAmount * (data.payoutMultiplier - 1);
           virtualBank.current.currentBetAmount = Number(
@@ -196,7 +206,8 @@ function RouteComponent() {
             virtualBank.current.highestWinStreak =
               virtualBank.current.currentWinStreak;
           }
-        } else if (winORlose == "LOST") { // lost virtual
+        } else if (winORlose == "LOST") {
+          // lost virtual
           virtualBank.current.balance -= virtualBank.current.currentBetAmount;
           virtualBank.current.currentLoseStreak += 1;
           virtualBank.current.currentWinStreak = 0;
@@ -224,19 +235,74 @@ function RouteComponent() {
             virtualBank.current.highestLoseStreak =
               virtualBank.current.currentLoseStreak;
           }
-          if(virtualBank.current.balance < virtualBank.current.currentBetAmount){ 
-            setServiceRunning(false);
+          if (
+            virtualBank.current.balance < virtualBank.current.currentBetAmount
+          ) {
+            if(values.enableChunksBetting){
+              toast.success("Reset !")
+              const data = await localforage.getItem<IDiceGameAccountData>("diceGameAccountData");
+              setTotalPayout((prev) => prev + (virtualBank.current.balance - Number(data?.virtualBalance)));
+              virtualBank.current.balance = Number(data?.virtualBalance || "10");
+              virtualBank.current.currentLoseStreak = 0;
+              virtualBank.current.highestLoseStreak = 0;
+              virtualBank.current.highestWinStreak = 0;
+              virtualBank.current.currentWinStreak = 0;
+              virtualBank.current.currentBetAmount = Number(data?.initialBetAmount || "0.01");
+              virtualBank.current.nextBetAmount = Number(data?.initialBetAmount || "0.01");
+              setFiledValue("virtualBalance", data?.virtualBalance || "10");
+              setFiledValue("realBalance", data?.realBalance || "10");
+              setFiledValue("initialBetAmount", data?.initialBetAmount || "0.01");
+              setFiledValue("nextBetMultiplier", data?.nextBetMultiplier || "2");
+              setFiledValue("stopAtCertainLossStreak", data?.stopAtCertainLossStreak || "5");
+              setTimeout(() => {
+                startVirtualService();
+              }, 200);
+              return
+            }
             toast.error("Virtual balance is less than current bet amount");
+            setServiceRunning(false);
             serviceRunningRef.current = false;
           }
         }
       } else {
         throw new Error("Error: No data received from server");
       }
-      if (serviceRunningRef.current && virtualBank.current.balance > Number(values.stopAtVirtualBalnce)) {
+      if (
+        serviceRunningRef.current &&
+        virtualBank.current.balance < Number(values.stopAtVirtualBalnce)
+      ) {
         setTimeout(() => {
           startVirtualService();
         }, 200);
+      }
+      if (
+        serviceRunningRef.current &&
+        virtualBank.current.balance >= Number(values.stopAtVirtualBalnce)
+      ) {
+        if(values.enableChunksBetting){
+          toast.success("Reset !")
+          const data = await localforage.getItem<IDiceGameAccountData>("diceGameAccountData");
+          setTotalPayout((prev) => prev + (virtualBank.current.balance - Number(data?.virtualBalance)));
+          virtualBank.current.balance = Number(data?.virtualBalance || "10");
+          virtualBank.current.currentLoseStreak = 0;
+          virtualBank.current.highestLoseStreak = 0;
+          virtualBank.current.highestWinStreak = 0;
+          virtualBank.current.currentWinStreak = 0;
+          virtualBank.current.currentBetAmount = Number(data?.initialBetAmount || "0.01");
+          virtualBank.current.nextBetAmount = Number(data?.initialBetAmount || "0.01");
+          setFiledValue("virtualBalance", data?.virtualBalance || "10");
+          setFiledValue("realBalance", data?.realBalance || "10");
+          setFiledValue("initialBetAmount", data?.initialBetAmount || "0.01");
+          setFiledValue("nextBetMultiplier", data?.nextBetMultiplier || "2");
+          setFiledValue("stopAtCertainLossStreak", data?.stopAtCertainLossStreak || "5");
+          setTimeout(() => {
+            startVirtualService();
+          }, 200);
+          return
+        }
+        setServiceRunning(false);
+        serviceRunningRef.current = false;
+        toast.success("Virtual balance reached to stop limit");
       }
     } catch (error) {
       console.error("Error:", error);
@@ -260,6 +326,8 @@ function RouteComponent() {
     }
   }, [serviceRunning]);
 
+  console.log('totalPayout', totalPayout)
+
   return (
     <div className="bg-primarybg h-full p-2">
       <div className=" bg-[#595959] flex flex-col h-full w-full rounded-md">
@@ -271,6 +339,7 @@ function RouteComponent() {
               serviceRunningRef={serviceRunningRef}
               setServiceRunning={setServiceRunning}
               virtualBalance={values.virtualBalance || "0"}
+              chunksBettingEnabled={values.enableChunksBetting}
             />
             <div className="flex flex-1 overflow-hidden">
               <DiceForm

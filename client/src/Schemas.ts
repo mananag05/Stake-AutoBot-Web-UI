@@ -16,5 +16,6 @@ export const schema = z.object({
   method: z.enum(["virtual", "real"]),
   currency: currencySchema,
   target: z.string(),
-  stopAtVirtualBalnce : z.string()
+  stopAtVirtualBalnce : z.string(),
+  enableChunksBetting : z.boolean()
 });

@@ -1,26 +1,33 @@
+import { useEffect } from "react";
 import { twMerge } from "tailwind-merge";
 
 interface IDiceHeaderProps {
-    virtualBalance: string;
-    realBalance : string;
-    setServiceRunning : any;
-    serviceRunningRef : any
-    serviceRunning : boolean;
+  virtualBalance: string;
+  realBalance: string;
+  setServiceRunning: any;
+  serviceRunningRef: any;
+  serviceRunning: boolean;
+  chunksBettingEnabled?: boolean;
+  totalPayout?: number;
 }
 
 const DiceHeader: React.FC<IDiceHeaderProps> = ({
-    virtualBalance,
-    realBalance,
-    setServiceRunning,
-    serviceRunningRef,
-    serviceRunning
+  virtualBalance,
+  realBalance,
+  setServiceRunning,
+  serviceRunningRef,
+  serviceRunning,
+  chunksBettingEnabled,
+  totalPayout,
 }) => {
-    
+
   return (
     <div className="flex">
-      <p className="p-2 text-yellow-100 font-semibold font-sans">
-        Stake Autobot Webui
-      </p>
+      {!chunksBettingEnabled && (
+        <p className="p-2 text-yellow-100 font-semibold font-sans">
+          Stake Autobot Webui
+        </p>
+      )}
       <div className="flex flex-1 justify-center gap-4 items-center">
         <div className="bg-primarybg text-yellow-100 font-semibold text-xs mt-2 rounded-xl p-2">
           <p>Virtual Balance : {virtualBalance}</p>

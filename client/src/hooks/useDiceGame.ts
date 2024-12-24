@@ -54,9 +54,6 @@ export function useDiceGame() {
         throw new Error(`Error: ${result.message || "Unknown error"}`);
       }
     },
-    onSuccess : (data) => {
-        console.log('placed')
-    }
   });
 }
 

@@ -3,7 +3,10 @@ import styles from "../../styles/hide-scrollbar.module.scss";
 import {
   handleSaveAccountData,
   handleSaveHeadersData,
+  handleUpdateEnableChunksBetting,
 } from "../utils/updateDice";
+import { Switch } from "@/components/ui/switch";
+import { useEffect } from "react";
 
 const DiceForm = ({
   values,
@@ -14,9 +17,22 @@ const DiceForm = ({
   setFiledValue: any;
   serviceRunning: boolean;
 }) => {
-  const preventScrollChange = (e: React.WheelEvent<HTMLInputElement>) => {
-    e.preventDefault();
-  };
+  
+  useEffect(() => {
+    const handleWheelEvent = (event: WheelEvent) => {
+      const activeElement = document.activeElement;
+      if (
+        activeElement instanceof HTMLInputElement &&
+        activeElement.type === "number"
+      ) {
+        activeElement.blur();
+      }
+    };
+    document.addEventListener("wheel", handleWheelEvent);
+    return () => {
+      document.removeEventListener("wheel", handleWheelEvent);
+    };
+  }, []);
 
   return (
     <div
@@ -27,7 +43,7 @@ const DiceForm = ({
     >
       <div className="p-2 flex flex-col gap-2 bg-neutral-800 rounded-xl m-2">
         <div className="flex flex-col text-white">
-          <p className="font-mono text-sm">Cookie*</p>
+          <p className="text-sm">Cookie*</p>
           <textarea
             className={twMerge(
               "bg-primarybg p-2 outline-none rounded-xl resize-none",
@@ -40,7 +56,7 @@ const DiceForm = ({
           />
         </div>
         <div className="flex flex-col text-white">
-          <p className="font-mono text-sm">xAccessToken*</p>
+          <p className="text-sm">xAccessToken*</p>
           <input
             className="bg-primarybg p-2 outline-none rounded-xl resize-none"
             onChange={(e) => setFiledValue("xAccessToken", e.target.value)}
@@ -49,7 +65,7 @@ const DiceForm = ({
           />
         </div>
         <div className="flex flex-col text-white">
-          <p className="font-mono text-sm">xLockDownToken*</p>
+          <p className="text-sm">xLockDownToken*</p>
           <input
             className="bg-primarybg p-2 outline-none rounded-xl resize-none"
             onChange={(e) => setFiledValue("xLockDownToken", e.target.value)}
@@ -73,69 +89,68 @@ const DiceForm = ({
       </div>
       <div className="p-2 flex flex-col gap-2 bg-neutral-800 rounded-xl m-2">
         <div className="flex flex-col text-white">
-          <p className="font-mono text-sm">Set Real Balance</p>
+          <p className="text-sm">Set Real Balance</p>
           <input
             type="number"
             min={0}
             className="bg-primarybg p-2 outline-none rounded-xl resize-none"
             onChange={(e) => setFiledValue("realBalance", e.target.value)}
-            onWheel={preventScrollChange}
             value={values.realBalance}
             disabled={serviceRunning}
           />
         </div>
         <div className="flex flex-col text-white">
-          <p className="font-mono text-sm">Set Virtual Balance</p>
+          <p className="text-sm">Set Virtual Balance</p>
           <input
             type="number"
             min={0}
             className="bg-primarybg p-2 outline-none rounded-xl resize-none"
             onChange={(e) => setFiledValue("virtualBalance", e.target.value)}
-            onWheel={preventScrollChange}
             value={values.virtualBalance}
             disabled={serviceRunning}
           />
         </div>
         <div className="flex flex-col text-white">
-          <p className="font-mono text-sm">Set Initial Bet</p>
+          <p className="text-sm">Set Initial Bet</p>
           <input
             type="number"
             min={0}
             className="bg-primarybg p-2 outline-none rounded-xl resize-none"
             onChange={(e) => setFiledValue("initialBetAmount", e.target.value)}
-            onWheel={preventScrollChange}
             value={values.initialBetAmount}
             disabled={serviceRunning}
           />
         </div>
         <div className="flex flex-col text-white">
-          <p className="font-mono text-sm">On Loss Bet Multiplier</p>
+          <p className="text-sm">On Loss Bet Multiplier</p>
           <input
             type="number"
             min={0}
             className="bg-primarybg p-2 outline-none rounded-xl resize-none"
             onChange={(e) => setFiledValue("nextBetMultiplier", e.target.value)}
-            onWheel={preventScrollChange}
             disabled={serviceRunning}
             value={values.nextBetMultiplier}
           />
         </div>
         <div className="flex flex-col text-white">
-          <p className="font-mono text-sm">Reset On Loss Streak</p>
+          <p className="text-sm">Reset On Loss Streak</p>
           <input
             type="number"
             min={0}
             className="bg-primarybg p-2 outline-none rounded-xl resize-none"
-            onChange={(e) => setFiledValue("stopAtCertainLossStreak", e.target.value)}
-            onWheel={preventScrollChange}
+            onChange={(e) =>
+              setFiledValue("stopAtCertainLossStreak", e.target.value)
+            }
             disabled={serviceRunning}
             value={values.stopAtCertainLossStreak}
           />
         </div>
         <div className="flex flex-col text-white">
-          <p className="font-mono text-sm">Method</p>
+          <p className="text-sm">Method</p>
           <select
-            onChange={(e) => setFiledValue("method", e.target.value as "virtual" | "real")}
+            onChange={(e) =>
+              setFiledValue("method", e.target.value as "virtual" | "real")
+            }
             disabled={serviceRunning}
             value={values.method || "virtual"}
             className="bg-primarybg p-2 outline-none rounded-xl resize-none"
@@ -145,7 +160,7 @@ const DiceForm = ({
           </select>
         </div>
         <div className="flex flex-col text-white">
-          <p className="font-mono text-sm">Currency</p>
+          <p className="text-sm">Currency</p>
           <select
             onChange={(e) =>
               setFiledValue(
@@ -164,7 +179,7 @@ const DiceForm = ({
           </select>
         </div>
         <div className="flex flex-col text-white">
-          <p className="font-mono text-sm">Condition</p>
+          <p className="text-sm">Condition</p>
           <select
             onChange={(e) =>
               setFiledValue(
@@ -182,7 +197,7 @@ const DiceForm = ({
           </select>
         </div>
         <div className="flex flex-col text-white">
-          <p className="font-mono text-sm">Target</p>
+          <p className="text-sm">Target</p>
           <input
             type="number"
             min={0}
@@ -192,23 +207,19 @@ const DiceForm = ({
               const newValue = Math.min(Number(e.target.value), 100);
               setFiledValue("target", String(newValue));
             }}
-            onWheel={preventScrollChange}
             disabled={serviceRunning}
             value={values.target}
           />
         </div>
         <div className="flex flex-col text-white">
-          <p className="font-mono text-sm">Stop when virtual balance reach</p>
+          <p className="text-sm">Stop when virtual balance reach</p>
           <input
             type="number"
             min={0}
-            max={100}
             className="bg-primarybg p-2 outline-none rounded-xl resize-none"
             onChange={(e) => {
-              const newValue = Math.min(Number(e.target.value), 100);
-              setFiledValue("stopAtVirtualBalnce", String(newValue));
+              setFiledValue("stopAtVirtualBalnce", e.target.value);
             }}
-            onWheel={preventScrollChange}
             disabled={serviceRunning}
             value={values.stopAtVirtualBalnce}
           />
@@ -225,7 +236,7 @@ const DiceForm = ({
               realBalance: values.realBalance || "",
               currency: values.currency || "inr",
               method: values.method || "virtual",
-              stopAtVirtualBalnce: values.stopAtVirtualBalnce
+              stopAtVirtualBalnce: values.stopAtVirtualBalnce,
             })
           }
           disabled={serviceRunning}
@@ -233,6 +244,33 @@ const DiceForm = ({
         >
           Save
         </button>
+      </div>
+      <div className="p-2 flex flex-col gap-2 items-center bg-neutral-800 rounded-xl m-2">
+        <div className="flex gap-2 items-center">
+          <p className="text-white text-sm mr-auto">• Enable Chunks Betting</p>
+          <Switch
+            checked={values.enableChunksBetting}
+            onCheckedChange={(e) => {
+              setFiledValue("enableChunksBetting", e);
+              handleUpdateEnableChunksBetting(e);
+            }}
+            disabled={serviceRunning}
+          />
+        </div>
+          <div className="flex flex-col gap-1 text-white">
+            <p className="text-sm">Set payout when balance reach</p>
+            <input
+              type="number"
+              min={0}
+              className="bg-primarybg p-2 outline-none rounded-xl resize-none"
+              onChange={(e) => {
+                const newValue = Math.min(Number(e.target.value), 100);
+                setFiledValue("stopAtVirtualBalnce", String(newValue));
+              }}
+              disabled={serviceRunning}
+              value={values.stopAtVirtualBalnce}
+            />
+          </div>
       </div>
     </div>
   );
