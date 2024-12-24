@@ -18,7 +18,6 @@ const getConstraints = createGetConstraints();
 
 function RouteComponent() {
   const { mutateAsync } = useDiceGame();
-  const numRegex = /^\d+(\.\d+)?$/;
   const [serviceRunning, setServiceRunning] = useState(false);
   const serviceRunningRef = useRef(serviceRunning);
   const [loading, setLoading] = useState(true);
@@ -237,14 +236,14 @@ function RouteComponent() {
       if (serviceRunningRef.current && virtualBank.current.balance > Number(values.stopAtVirtualBalnce)) {
         setTimeout(() => {
           startVirtualService();
-        }, getRandomTimeOut());
+        }, 200);
       }
     } catch (error) {
       console.error("Error:", error);
       if (serviceRunningRef.current) {
         setTimeout(() => {
           startVirtualService();
-        }, getRandomTimeOut());
+        }, 200);
       }
     }
   };

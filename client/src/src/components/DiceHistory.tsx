@@ -4,7 +4,7 @@ export type HistoryItem = {
   result: "WON" | "LOST";
   betAmount: number;
   payout: number;
-  newBalance: number;
+newBalance: number;
   currentLoseStreak: number;
   currentWinStreak: number;
   highestLoseStreak: number;
